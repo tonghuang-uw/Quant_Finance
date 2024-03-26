@@ -51,7 +51,20 @@ def efficientFrontier(portfolio, start, end = datetime.today().strftime('%Y-%m-%
 portfolio = ['AAPL', 'TSLA']
 port_weight, port_ret_vec, port_std_vec, port_rtol_vec = efficientFrontier(portfolio, '2015-01-01')
 
+# Assume a risk-free rate of 0.03
+rf = 0.03
+
+optimal_idx = np.argmax((port_ret_vec - rf)/port_std_vec)
+optimal_ret = port_ret_vec[optimal_idx]
+optimal_std = port_std_vec[optimal_idx]
+slope = (optimal_ret - rf)/optimal_std
+
+cal_std = np.array([0, optimal_std * 2])
+cal_ret = rf + slope * cal_std
+
 plt.plot(port_std_vec, port_ret_vec)
+plt.plot(port_std_vec[optimal_idx], port_ret_vec[optimal_idx], '*')
+plt.plot(cal_std, cal_ret, 'r--', label='Capital Allocation Line')
 plt.xlabel('Portfolio Standard Deviation')
 plt.ylabel('Portfolio Return')
 plt.title('Efficient Frontier')
