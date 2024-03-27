@@ -18,7 +18,7 @@ def efficientFrontier(portfolio, start, end = datetime.today().strftime('%Y-%m-%
     mu_vec, std_vec, cov_mat = getStats(df)
 
     # assign empty array
-    port_weight = np.zeros((num_port, 2))
+    port_weight = np.zeros((num_port, num_assets))
     port_ret_vec = np.zeros(num_port)
     port_std_vec = np.zeros(num_port)
     port_rtol_vec = np.zeros(num_port)
@@ -41,26 +41,33 @@ def efficientFrontier(portfolio, start, end = datetime.today().strftime('%Y-%m-%
                                     method = 'SLSQP',
                                     bounds = bounds,
                                     constraints = constraints)
-        port_weight[nport-1, 0], port_weight[nport-1, 1] = optimal_portfolio.x
+
+        port_weight[nport-1, :] = optimal_portfolio.x
         port_ret_vec[nport-1] = port_ret(port_weight[nport-1], mu_vec)
         port_std_vec[nport-1] = np.sqrt(port_variance(port_weight[nport-1], cov_mat))
         port_rtol_vec[nport-1] = rtol
     
     return port_weight, port_ret_vec, port_std_vec, port_rtol_vec
 
-portfolio = ['AAPL', 'TSLA']
+portfolio = ['AAPL', 'META', 'AMZN', 'NFLX', 'GOOG']
 port_weight, port_ret_vec, port_std_vec, port_rtol_vec = efficientFrontier(portfolio, '2015-01-01')
 
 # Assume a risk-free rate of 0.03
-rf = 0.03
+rf = 0.05
 
 optimal_idx = np.argmax((port_ret_vec - rf)/port_std_vec)
 optimal_ret = port_ret_vec[optimal_idx]
 optimal_std = port_std_vec[optimal_idx]
 slope = (optimal_ret - rf)/optimal_std
 
-cal_std = np.array([0, optimal_std * 2])
+cal_std = np.array([0.2, optimal_std * 1.5])
 cal_ret = rf + slope * cal_std
+optimal_weight = port_weight[optimal_idx]
+
+plt.bar(portfolio, optimal_weight)
+plt.title("Weight Assignment on FAANG")
+plt.savefig("Optimal Weight")
+plt.show()
 
 plt.plot(port_std_vec, port_ret_vec)
 plt.plot(port_std_vec[optimal_idx], port_ret_vec[optimal_idx], '*')
@@ -68,4 +75,5 @@ plt.plot(cal_std, cal_ret, 'r--', label='Capital Allocation Line')
 plt.xlabel('Portfolio Standard Deviation')
 plt.ylabel('Portfolio Return')
 plt.title('Efficient Frontier')
+plt.savefig('Efficient Frontier.png')
 plt.show()
