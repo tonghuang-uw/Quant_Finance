@@ -1,0 +1,373 @@
+---
+title: "Multi-Asset Portfolio Allocation Strategies Analysis"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r, echo=FALSE, results='hide'}
+# import library
+library(CVXR)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+```
+
+```{r, echo=FALSE}
+library(readxl)
+MIBF_return <- read_excel("~/Desktop/cfrm503/MIBF_totalReturn.xlsx")
+peerPerformance <- read_excel("~/Desktop/cfrm503/PeerAnnualizedPerformance.xlsx")
+index_df <- read_excel("~/Desktop/cfrm503/FinalProjectData_25May2023.xlsx")
+```
+
+## Pre-Analysis
+
+### Return Target
+
+```{r, echo=FALSE}
+target_exRet <- quantile(peerPerformance$`Excess Return`, 0.6)
+target_exRet
+```
+
+We used the data of peers' performance over last five years to determine our target excess return. 
+By using historical data, to outperform 60% of peer fund, our excess return target need to be 0.004798684.
+
+### Information Ratio Table
+
+```{r, echo=FALSE}
+# data cleaning
+index_df <- index_df[,-1]
+MIBF_return <- MIBF_return[,-1]
+peerPerformance <- peerPerformance[,-1]
+```
+We calculate the information ratio that We expect each asset class team to achieve in the future.
+
+```{r,echo=FALSE}
+
+information_ratio <- matrix(rep(NA, 8))
+
+for (i in 1:ncol(MIBF_return)){
+  nu <- mean((MIBF_return[,i] - index_df[,i+1])[,1])
+  de <- sd((MIBF_return[,i] - index_df[,i+1])[,1])
+  information_ratio[i] <- nu/de
+}
+rownames(information_ratio) <- colnames(MIBF_return)
+colnames(information_ratio) <- "Information Ratio"
+information_ratio
+```
+
+
+
+```{r, echo=FALSE}
+annual_information_ratio <- information_ratio*sqrt(12)
+colnames(annual_information_ratio) <- "Annualized Information Ratio"
+annual_information_ratio
+```
+
+### Performance Table
+
+The table of metrics of different asset classes.
+
+```{r, echo=FALSE}
+AssetNames <- c("Glob. Eq.", "US LC", "US SC", "Dev Int'l", "EM Eq.", "Real Est.",
+                "Corp Bond", "Agg Bond", "Cash")
+
+ret_vec <- c(0.095, 0.105, 0.09, 0.075, 0.08, 0.095, 0.055, 0.05, 0.04)
+names(ret_vec) <- AssetNames
+stdev_vec <- c(0.185, 0.19, 0.24, 0.18, 0.19, 0.205, 0.095, 0.055, 0.015)
+names(stdev_vec) <- AssetNames
+NumInvestments = length(ret_vec)
+
+correl_mat <- matrix(c(1.00, 0.96, 0.89, 0.92, 0.74, 0.82, 0.63, 0.37, 0.02,
+                       0.96, 1.00, 0.89, 0.87, 0.70, 0.82, 0.61, 0.36, 0.00,
+                       0.89, 0.89, 1.00, 0.82, 0.71, 0.77, 0.52, 0.24, -0.08,
+                       0.92, 0.87, 0.82, 1.00, 0.81, 0.77, 0.65, 0.40, 0.06,
+                       0.74, 0.70, 0.71, 0.81, 1.00, 0.62, 0.61, 0.39, 0.08,
+                       0.82, 0.82, 0.77, 0.77, 0.62, 1.00, 0.64, 0.44, 0.04,
+                       0.63, 0.61, 0.52, 0.65, 0.61, 0.64, 1.00, 0.88, 0.52,
+                       0.37, 0.36, 0.24, 0.40, 0.39, 0.44, 0.88, 1.00, 0.77,
+                       0.02, 0.00, -0.08, 0.06, 0.08, 0.04, 0.52, 0.77, 1.00), 
+                     nrow = NumInvestments, ncol = NumInvestments)
+
+cov_mat <- diag(stdev_vec) %*% correl_mat %*% diag(stdev_vec)
+```
+
+```{r, echo=FALSE}
+bench_mu <- 0.55*ret_vec[1] + 0.45*ret_vec[8]
+bench_sd <- sqrt(0.55^2*cov_mat[1,1] + 0.45^2*cov_mat[8,8] + 2*0.55*0.45*cov_mat[1,8])
+
+bench_cov <- 0.55*cov_mat[,1] + 0.45*cov_mat[,8]
+
+new_cov_mat <- cbind(cov_mat, bench_cov)
+new_bench <- c(bench_cov, bench_sd^2)
+new_cov_mat <- rbind(new_cov_mat, new_bench)
+
+cor_mat <- cov2cor(new_cov_mat)
+new_ret_vec <- c(ret_vec, bench_mu)
+new_std_vec <- c(stdev_vec, bench_sd)
+
+new_table <- rbind(new_ret_vec, new_std_vec)
+new_table <- rbind(new_table, cor_mat)
+colnames(new_table)[10] <- "Benchmark"
+rownames(new_table) <- c("Expected Return", "Standard Deviation", colnames(new_table))
+new_table_df <- data.frame(new_table)
+new_table_df
+```
+
+
+### Data Insights
+
+To ramp up the security selection process, we aim to find the security class that is less correlated to the benchmark and is taking more deviation from the benchmark. Also, we need to consider the securities that has higher expected return to ramp up the selection process. Meanwhile, we need to focus the aggressiveness on the securities with the potential of higher return even if they have higher volatility.
+
+To rein in the security selection process, we aim to find the security class that is more correlated to the benchmark and add more risk adverse security during the selection process. Also, we find securities with lower expected return and lower volatility to mitigate risk.
+
+If we select US small cap equity market will ramp up the security selection process aggressiveness, because the US small cap is less correlated with the benchmark compared to the US large cap, and its higher standard deviation indicate that we may have higher return if we have more US small cap in the portfolio. We can also choose Real Estate which is also less correlated with the benchmark, and generate high return. Since we only allow 50 to 60 percent of the portfolio to be equity, we will have 40 to 50 percent of the portfolio to be fixed income assets. We may want to choose Corporate Bond to ramp up the aggressiveness because Corporate Bond has high return .
+
+On the other hand, we choose US large cap equity market to rein in the selection process, since the correlation between the US large cap equity market and the benchmark is the highest, which might contribute the most to the benchmark weight even though we cannot invest in Global Equity. Also we can choose Dev. International Equity market for equity portion of the portfolio because it is second highest corralated assets in the equity market, and it also has the similar expected return and standard deviation to the Global Equity market. For the fixed income portion of the portfolio, we may want to select AGG Bond to rein in the selection process, because 45 percent of weight in the benchmark is AGG Bond. 
+
+
+### Objective Function
+
+The description of the project indicates that we need to limit the tracking error relative to the Fund Evaluator's benchmark. Thus, the objection function of the problem is maximizing the excess returns while minimizing the tracking error between the portfolio and the benchmark that Fund Evaluator's create. The function can be written as
+$Max \mu^T(W_P-W_B) - \frac{\lambda}{2}(W_P-W_B)^TC(W_P-W_B)$.
+
+### Decisions
+
+The decisions that must be made are the asset allocation of each asset class, and the level of security selection process within each asset class sleeve.
+
+### Constraints
+
+The restrictions on allocation choices:
+
+1. Only 50% to 60% of the portfolio can be equity, meaning that 40% to 50% of the portfolio are allowed to be non-equity.
+
+2. Outperforming 60% of other funds, which indicates the excess return of the portfolio need to be larger than 0.004798684 monthly.
+
+3. The sum of asset weights need to be 1.
+
+4. At least 5% weight on each asset class.
+
+5. No allocation allowed in Global equity.
+
+
+## Post-Analysis
+
+
+```{r, echo=FALSE}
+# calculate the standard deviation of active portfolio
+active_variance <- apply(MIBF_return[,1:8]-index_df[,2:9],2,var)*12
+active_ex_ret <- apply(MIBF_return[,1:8]-index_df[,2:9],2,mean)*12
+```
+
+```{r, echo=FALSE}
+# creating the covariance matrix
+active_cov_mat <- cbind(cov_mat, matrix(0, 9, 8))
+low_mat <- cbind(matrix(0, 8, 9), diag(active_variance))
+active_cov_mat <- rbind(active_cov_mat, low_mat)
+```
+
+
+```{r,echo=FALSE}
+x0 <- c(0.55, 0, 0, 0, 0, 0, 0, 0.45, 0, rep(0, 8))
+
+# Setting up the constraints
+
+NumOfInvestment <- ncol(index_df)
+NumOfFactor <- ncol(MIBF_return)
+
+X <- Variable(NumOfInvestment + NumOfFactor)
+
+constraint_full_investment <- sum(X[2:9]) == 1
+
+constraint_minimum_weight <- X[2:9] >= 0.05
+
+constraint_equity_max <- sum(X[2:6]) <= 0.6
+
+constraint_equity_min <- sum(X[2:6]) >= 0.5
+
+constraint_no_global <- X[1] == 0
+
+constraint_security_process_max <- X[10:17] <= 2 * (X[2:9])
+
+constraint_security_process_min <- X[10:17] >= 0.5 * (X[2:9])
+
+constraints <- list(constraint_full_investment,
+                    constraint_minimum_weight,
+                    constraint_equity_max,
+                    constraint_equity_min,
+                    constraint_no_global,
+                    constraint_security_process_max,
+                    constraint_security_process_min)
+```
+
+```{r,echo=FALSE}
+NumPorts <- 100
+
+portTols <- NULL
+portWeight <- array(0, c(NumPorts, NumOfInvestment))
+portFactor <- array(0, c(NumPorts, NumOfFactor))
+portReturn <- NULL
+portExRet <- NULL
+portTrack <- NULL
+
+for (port in 1:NumPorts){
+  rtol <- (port-1) * 0.0005
+  prob <- Problem(Minimize(quad_form(X-x0, active_cov_mat) - 
+                           rtol * (t(matrix(ret_vec)) %*% X[1:9] + 
+                                     t(matrix(active_ex_ret)) %*% X[10:17] -
+                                     t(matrix(ret_vec)) %*% x0[1:9])), constraints)
+  result <- solve(prob)
+  portTols <- c(portTols, rtol)
+  portWeight[port,] <- result$getValue(X)[1:9]
+  portFactor[port,] <- result$getValue(X)[10:17]
+  ret <- t(matrix(ret_vec)) %*% portWeight[port,] + t(matrix(active_ex_ret)) %*% portFactor[port,]
+  portReturn <- c(portReturn, ret)
+  portExRet <- c(portExRet, ret - t(matrix(ret_vec)) %*% x0[1:9])
+  portTrack <- c(portTrack, t(result$getValue(X)-x0) %*% active_cov_mat %*% (result$getValue(X)-x0))
+}
+```
+
+This report concludes the allocation process and the aggressiveness of security process that a portfolio manager can make based on the criteria provided. The report uses revised optimization problem to solve the minimum tracking error portfolio to achieve the target return that exceeds 60% of peer funds. It also analyze the risk of the minimum tracking error portfolio, and if the portfolio is qualified as MA50to60 Fund.
+
+### The allocation of the portfolio
+
+The target return we aim is 0.004799. The objective function we use is $MAX\mu^T(W_P-W_B) - \frac{\lambda}{2}(W_P-W_B)^TC(W_P-W_B)$. This implies that we are trying to maximize the excess return while having tracking error as a penalty term. 
+
+To clarify the objective function, $W_P$ is the sum of $W_{index}$ and $W_{active}$. $W_{index}$ is the weight that is allocation process for all the asset classes, and $W_{active}$ is the exposure to the aggressiveness of security selection process.
+
+We will create 100 portfolio that is based on the risk tolerance we set. The report also includes efficient frontier, allocation choices, and security selection choices as observations, and all the codes in appendix. In this case, the higher the tolerance is, the higher excess return will be. We find the first portfolio that hit the target, which is the 26th portfolio that we find. The weight of the portfolio is shown below. 
+
+```{r,echo=FALSE}
+target_weight <- matrix(round(portWeight[26,], 4))
+rownames(target_weight) <- AssetNames
+colnames(target_weight) <- "Weight"
+target_weight
+```
+
+The excess return that portfolio generates is shown below.
+
+```{r, echo=FALSE}
+portExRet[26]
+```
+
+
+
+## The level of aggressiveness of the security selection process within each asset class
+
+The level of aggressiveness is shown below. The level of aggressiveness is calculated by dividing $W_{active}/W_{index}$, which will be a number between 0.5 and 2. So, We can observe the level of aggressiveness on the same scale among all the asset team.
+
+```{r,echo=FALSE}
+level_agg <- matrix(portFactor[26,]/portWeight[26,-1])
+rownames(level_agg) <- AssetNames[-1]
+colnames(level_agg) <- "Level of Aggressive"
+level_agg
+```
+
+
+## Risk of the Portfolio
+
+The portion of total benchmark-relative risk (i.e., variance) that is due to asset allocation
+decisions as well as the portion that is due to security selection activities.
+
+```{r,echo=FALSE}
+allocation_risk <- as.numeric((portWeight[26,]-x0[1:9]) 
+                              %*% active_cov_mat[1:9,1:9] 
+                              %*% matrix(portWeight[26,]-x0[1:9]))
+```
+
+The risk that is due to allocation is 0.0005525494, and the risk that is due to security selection is 6.254611e-05. The portion of risk that is due to allocation is 89.83%, and the portion of risk that is due to security selection is 10.17%.
+
+```{r, echo=FALSE}
+selection_risk <- portFactor[26,] %*% active_cov_mat[10:17, 10:17] %*% matrix(portFactor[26,])
+```
+
+```{r,echo=FALSE}
+portion_allocation <- allocation_risk/(allocation_risk+selection_risk)
+portion_selection <- selection_risk/(allocation_risk+selection_risk)
+colnames(portion_allocation) <- "Portion of allocation risk"
+colnames(portion_selection) <- "Portion of selection risk"
+```
+
+### MA50to60 Group Critiria Satisfaction
+
+```{r}
+sum(portWeight[26,1:6])
+```
+
+Based on the portfolio we found, the sum of the weight of equities is 0.5498357, so the fund will be qualified for the MA50to60 group of funds.
+
+
+### Additional Observations or Recommendations
+
+The efficient frontier is shown below, which indicates if we increase the risk tolerance, we can achieve higher excess return with higher tracking error.
+
+```{r, echo=FALSE}
+frontier_df <- as.data.frame(round(portWeight,4))
+colnames(frontier_df) <- c(AssetNames)
+frontier_df <- frontier_df %>% 
+              mutate(ExReturn = portExRet,
+                     TE = sqrt(portTrack),
+                     RTol = portTols)
+
+plot(sqrt(portTrack), portExRet, type="l", xlim = c(0,0.03), ylim = c(0,0.02),
+     xaxt = "n", yaxt = "n", frame.plot = FALSE)
+axis(1, pos=0)
+axis(2, pos=0)
+```
+
+
+#### Allocation versus Tracking Error
+
+```{r, echo=FALSE}
+# plot allocation versus tracking error
+plotData <- frontier_df %>% gather(key = "asset", value = "value", 1:9)
+myPlot <- ggplot(plotData, aes(x = TE, y = value, fill = asset)) +
+  geom_area() +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1.001)) 
+plot(myPlot)
+```
+
+#### Allocation versus Risk Tolarance
+
+```{r, echo=FALSE}
+plotData <- frontier_df %>% gather(key = "asset", value = "value", 1:9)
+myPlot <- ggplot(plotData, aes(x = RTol, y = value, fill = asset)) +
+  geom_area() +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1.001)) 
+plot(myPlot)
+```
+
+#### Aggressiveness versus Risk Tolerance
+
+```{r, echo=FALSE}
+frontier_factor_df <- as.data.frame(round(portFactor/portWeight[,-1],4))
+colnames(frontier_factor_df) <- c(AssetNames[-1])
+frontier_factor_df <- frontier_factor_df %>% 
+              mutate(ExReturn = portExRet,
+                     TE = sqrt(portTrack),
+                     RTol = portTols)
+
+plotData <- frontier_factor_df %>% gather(key = "asset", value = "value", 1:8)
+myPlot <- ggplot(plotData, aes(x = RTol, y = value, fill = asset)) +
+  geom_area() +
+  scale_y_continuous(limits = c(0, 10))
+plot(myPlot)
+```
+
+
+1. Based on the asset allocation versus risk tolerance graph, most asset allocations are contributed by US large cap and AGG bond, because we are constructing a minimized tracking error portfolio.
+
+2. We can generate portfolio that yield higher excess return with higher tracking error.
+
+3. As targeting higher excess return, we aim to first increase the allocation of US large cap and AGG bond.
+
+4. Based on the information ratio of each asset team, EM equity, Corp Bond, and Agg Bond have the highest three information ratios, so we ramp up the aggressiveness of these three assets as shown in the Aggressive versus Risk Tolerance graph. We recommend that ramp up these three teams' aggressiveness when we want to increase the portfolio's excess return.
+
+
+## Appendix
+
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
+
+
+
