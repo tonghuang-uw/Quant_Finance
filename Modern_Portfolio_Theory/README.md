@@ -35,6 +35,14 @@ In this formula P is the sub-portfolio of risky assets at the tangency with the 
 
 ## Mean Variance portfolio Demonstration
 
+### Efficient Frontier Plot with FAANG
+![Efficient Frontier](https://github.com/tonghuang-uw/Quant_Finance/assets/62912258/fd373bee-c11f-407c-b723-cc3a961cae6e)
+
+### Optimal Weight Plot with FAANG
+![Optimal Weight](https://github.com/tonghuang-uw/Quant_Finance/assets/62912258/e8d378b7-e685-4638-a165-451e35ed221a)
+
+## Asset Allocation Project
+
 
 
 
