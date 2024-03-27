@@ -42,7 +42,8 @@ In this formula P is the sub-portfolio of risky assets at the tangency with the 
 ![Optimal Weight](https://github.com/tonghuang-uw/Quant_Finance/assets/62912258/e8d378b7-e685-4638-a165-451e35ed221a)
 
 ## Asset Allocation Project
+This project hosts the strategic analysis project for the MIBF, aiming to elevate its position within the MA50to60 multi-asset category. Our mission is to analyze historical performance, utilize market forecasts, and construct a robust allocation strategy that outperforms 60% of its peers. Through asset allocation and fine-tuned security selection, we aim to surpass industry benchmarks while controlling tracking error with higher performance among other funds. 
 
-[project](Asset_Allocation_Project/README.md)
+[Click here for more about the project!](Asset_Allocation_Project/README.md)
 
 
