@@ -21,6 +21,10 @@ We are looking to strike a balance between asset allocation and security selecti
 * Adjustments to the aggressiveness of the security selection process may be made, up to a reduction of 50%, if strategically beneficial.
 * The core of our risk relative to the benchmark will stem from asset allocation decisions.
 
+## Results
+Please view the pdf for the analysis.
+[Multi Asset Portfolio Allocation Strategies Analysis.pdf](https://github.com/tonghuang-uw/Quant_Finance/files/14780446/Multi.Asset.Portfolio.Allocation.Strategies.Analysis.pdf)
+
 ## Contributions
 
 Tong Huang
