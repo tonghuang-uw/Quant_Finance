@@ -120,7 +120,7 @@ class SST:
         """
         return self.q(p=np.random.random(size=n))
 
-sst = SST(0, 0, 0, 0)
+sst = SST(0, 0, , 3)
 x = np.linspace(-50, 50, 100)
 
 print(sst.d(x))
