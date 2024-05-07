@@ -4,12 +4,12 @@ This is a collection of notes exploring a number of topics and projects in Quant
 
 ## Quant Finance Projects
 
-### Modern Portfolio Theory
+### 1. Modern Portfolio Theory
 This project includes notes on CAPM, and a optimization project that aims to minimize the tracking error of a portfolio.
 
 [Click here for the link](Modern_Portfolio_Theory/README.md)
 
-### Monte Carlo Methods
+### 2. Monte Carlo Methods
 These are small applications that Monte Carlo methods can be used to solve.
 
 - [Asian Options](Monte_Carlo_Methods/Applications/Asian_options.ipynb)
@@ -21,16 +21,16 @@ These are small applications that Monte Carlo methods can be used to solve.
 #### Bigger project (Monte Carlo)
 Under construction
 
-### Pair Trading Research Project
+### 3. Pair Trading Research Project
 This project aims to evaluate a pair trading strategy where assuming the pair time series as OU process.
 
 More details can be found in another repo *PairTrading*
 
-### Numerical Method for pricing derivative
+### 4. Numerical Method for pricing derivative
 
 Under construction
 
-### Portfolio Analysis
+### 5. Portfolio Analysis
 
 This project is to Calculate Market and Credit Value at Risk (V aR) and Expected Short Fall (ES) of a portfolio of “Corporate” Zero Coupon Bonds with different maturities.
 
