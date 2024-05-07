@@ -100,5 +100,17 @@ $$\rho_{t_{ij}} = \frac{\rho_{ij} (1 - e^{-(\kappa_i + \kappa_j)(t-s)})}{\kappa_
 
 Here $\rho_{ij}$ is the instantaneous correlation of Brownian motions.
 
+## VaR and ES calculation
+
+Consider a 2-year time horizon for the portfolio analysis. Computed 25,000 Monte Carlo simulations of both, interest rates and credit ratings, to calculate 2-year 99% VaR and ES.
+
+* VaR: 23.74
+
+* ES: 30.38
+
+
+
+
+
 
 
