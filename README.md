@@ -32,7 +32,7 @@ Under construction
 
 ### 5. Portfolio Analysis
 
-This project is to Calculate Market and Credit Value at Risk (V aR) and Expected Short Fall (ES) of a portfolio of “Corporate” Zero Coupon Bonds with different maturities.
+This project is to calculate Market and Credit Value at Risk (VaR) and Expected Short Fall (ES) of a portfolio of “Corporate” Zero Coupon Bonds with different maturities.
 
 Link: [Market and Credit Risk Analysis](Portfolio_Analysis/README.md)
 
