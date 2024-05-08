@@ -26,9 +26,11 @@ This project aims to evaluate a pair trading strategy where assuming the pair ti
 
 More details can be found in another repo *PairTrading*
 
-### 4. Numerical Method for pricing derivative
+### 4. Numerical Method for Pricing Derivative
 
-Under construction
+This project is to utilize numerical method for pricing derivative, and it provides the formulas and code to compute European Vanilla options.
+
+Link: [Numerical Method for Pricing Derivative](Numerical_Computaion/README.md)
 
 ### 5. Portfolio Analysis
 
