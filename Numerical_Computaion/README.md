@@ -91,9 +91,14 @@ $$
 
 ## Result
 
+### Forward Euler
+![forward euler](https://github.com/tonghuang-uw/Quant_Finance/assets/62912258/f9e93f1a-86c8-4117-8738-595d4c79a666)
 
+### Backward Euler
+![Backward_Euler](https://github.com/tonghuang-uw/Quant_Finance/assets/62912258/e6cc9ab1-7d49-48b7-b9d7-2d34ee9fd757)
 
-
+### True Solution
+![True_solution](https://github.com/tonghuang-uw/Quant_Finance/assets/62912258/c589ef81-b3d2-435c-b319-44b0eea8a3aa)
 
 
 
